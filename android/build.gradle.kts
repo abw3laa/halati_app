@@ -3,29 +3,15 @@ allprojects {
         google()
         mavenCentral()
     }
-    
-    // هذا الكود يبحث في كل موديول (مثل shared_storage) وإذا وجد أنه يطلب jcenter يقوم باستبداله بـ mavenCentral فوراً
-    buildscript.configurations.all {
-        resolutionStrategy.eachDependency {
-            // هذا لضمان معالجة أي حزم قديمة
-        }
-    }
 }
 
-// تعديل إعدادات مستودعات الموديولات الفرعية بشكل آمن تماماً
 subprojects {
-    project.afterEvaluate {
-        repositories {
-            // نقوم بإضافة google و mavenCentral كأولوية قصوى للمكتبات الفرعية
-            google()
-            mavenCentral()
-            
-            // هنا نقوم بتعطيل jcenter برمجياً وتوجيهه لـ mavenCentral
-            all {
-                if (this is MavenArtifactRepository && url.toString().contains("jcenter")) {
-                    url = uri("https://repo.maven.apache.org/maven2/")
-                }
-            }
+    afterEvaluate {
+        if (project.plugins.hasPlugin("com.android.application") ||
+            project.plugins.hasPlugin("com.android.library")
+        ) {
+            project.repositories.google()
+            project.repositories.mavenCentral()
         }
     }
 }
