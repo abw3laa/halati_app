@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        UpdateService downloads the new APK into getTemporaryDirectory(),
+        which on Android maps to the app's cache dir — exposed here as
+        "cache-path" so the system installer can read it through a
+        content:// URI (open_filex handles building that URI for us).
+    -->
+    <cache-path name="update_cache" path="." />
+
+    <!-- Also cover the general external-files-dir Halati's other
+         download/save features already write into, in case a future
+         update flow needs to open files from there too. -->
+    <external-files-path name="external_files" path="." />
+</paths>

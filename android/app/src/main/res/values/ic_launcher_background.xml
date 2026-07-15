@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Solid backdrop shown behind the Halati adaptive-icon foreground
+         (matches the teal/blue tone of the supplied app_icon.png). -->
+    <color name="ic_launcher_background">#0B3D4C</color>
+</resources>

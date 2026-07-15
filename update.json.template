@@ -1,0 +1,11 @@
+{
+  "latestVersion": "2.0.0",
+  "latestBuildNumber": 1,
+  "apkUrl": "REPLACE_WITH_YOUR_MEDIAFIRE_DIRECT_DOWNLOAD_LINK",
+  "minRequiredBuildNumber": null,
+  "releaseNotes": {
+    "ar": "الإصدار الأول من نظام التحديث التلقائي لتطبيق حالاتي.",
+    "en": "First release of Halati's auto-update system.",
+    "tr": "Halati'nin otomatik güncelleme sisteminin ilk sürümü."
+  }
+}
