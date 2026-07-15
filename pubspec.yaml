@@ -21,15 +21,14 @@ dependencies:
 
   # Permissions & Android Storage Access Framework
   permission_handler: ^12.0.3
-  shared_storage: ^0.8.0
 
   # Networking (for the direct-link downloader)
   dio: ^5.4.3+1
 
   # Media
   video_player: ^2.9.1
-  photo_manager: ^3.2.3
-  gallery_saver_plus: ^3.2.4
+  photo_manager: ^3.8.3
+  gallery_saver_plus: ^3.2.9
   share_plus: ^13.2.1
   url_launcher: ^6.3.0
   flutter_localizations:
@@ -55,16 +54,14 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
-  
-  # 1. الأصول والصور المستخدمة في التطبيق
+
   assets:
     - assets/icon/app_icon.png
     - assets/icons/whatsapp.png
     - assets/icons/facebook.png
     - assets/icons/telegram.png
-    - assets/fonts/ # تضمين مجلد الخطوط كأصل محلي
+    - assets/fonts/
 
-  # 2. تعريف خط Cairo محلياً في التطبيق لقراءته دون إنترنت
   fonts:
     - family: Cairo
       fonts:

@@ -213,6 +213,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () async {
+              // ignore: deprecated_member_use
               await Share.share(
                 'حالاتي — تطبيق حفظ حالات واتساب: https://play.google.com/store/apps',
                 subject: 'حالاتي',

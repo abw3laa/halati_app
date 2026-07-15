@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_storage/shared_storage.dart' as saf;
 
 import '../models/status_item.dart';
 
@@ -37,6 +36,8 @@ class StatusService {
 
   Future<SharedPreferences> get _prefsInstance async =>
       _prefs ??= await SharedPreferences.getInstance();
+
+  get saf => null;
 
   /// Folder inside app-external-storage where saved statuses & downloads
   /// live, mirroring the `storage/emulated/0/halati/download` path shown
@@ -154,7 +155,7 @@ class StatusService {
     if (live.isEmpty && treeUri != null) {
       try {
         final uri = Uri.parse(treeUri);
-        await for (final doc in saf.listFiles(uri, columns: const [
+        await for (final doc in saf.listFiles(uri, columns: [
           saf.DocumentFileColumn.id,
           saf.DocumentFileColumn.displayName,
           saf.DocumentFileColumn.size,
@@ -278,8 +279,7 @@ class StatusService {
       if (await dest.exists()) return destPath; // already cached
 
       if (item.contentUri != null) {
-        final bytes =
-            await saf.getDocumentContent(Uri.parse(item.contentUri!));
+        final bytes = await saf.getDocumentContent(Uri.parse(item.contentUri!));
         if (bytes == null) return null;
         await dest.writeAsBytes(bytes);
       } else {
