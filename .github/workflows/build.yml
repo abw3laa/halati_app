@@ -20,11 +20,12 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          # Pinned to a specific, known-good version instead of the
-          # floating '3.x' tag — a floating tag let the runner install a
-          # Flutter build whose default compileSdk (31) was too old for
-          # gallery_saver_plus/photo_manager, breaking assembleRelease.
-          flutter-version: '3.24.5'
+          # Use the latest *stable* release rather than a fixed version
+          # number. A hard-pinned old version (e.g. 3.24.5, Dart 3.5.4)
+          # previously broke the build because flutter_lints ^6.0.0 needs
+          # Dart >=3.8.0 — newer than that pinned Flutter shipped. Staying
+          # on "stable" avoids repeating that mismatch as pubspec.yaml's
+          # own dependencies get upgraded over time.
           channel: 'stable'
 
       - name: Install dependencies
