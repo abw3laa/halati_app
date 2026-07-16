@@ -10,7 +10,7 @@ android {
     // gallery_saver_plus / photo_manager's AndroidX dependencies require
     // compileSdk 34+, but flutter.compileSdkVersion silently resolved to
     // 31 on the CI runner's Flutter install, breaking the release build.
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
