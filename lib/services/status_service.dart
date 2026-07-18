@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,8 +6,11 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_storage/shared_storage.dart' as saf;
 
 import '../models/status_item.dart';
+import 'media_store_service.dart';
+import '../models/download_item.dart' show DownloadKind;
 
 /// Common on-device locations for the WhatsApp / WhatsApp Business
 /// ".Statuses" cache folder across Android versions & OEM WhatsApp forks.
@@ -36,8 +40,6 @@ class StatusService {
 
   Future<SharedPreferences> get _prefsInstance async =>
       _prefs ??= await SharedPreferences.getInstance();
-
-  get saf => null;
 
   /// Folder inside app-external-storage where saved statuses & downloads
   /// live, mirroring the `storage/emulated/0/halati/download` path shown
@@ -155,7 +157,7 @@ class StatusService {
     if (live.isEmpty && treeUri != null) {
       try {
         final uri = Uri.parse(treeUri);
-        await for (final doc in saf.listFiles(uri, columns: [
+        await for (final doc in saf.listFiles(uri, columns: const [
           saf.DocumentFileColumn.id,
           saf.DocumentFileColumn.displayName,
           saf.DocumentFileColumn.size,
@@ -218,7 +220,17 @@ class StatusService {
       final keepAlivePath =
           existing?.keepAlivePath ?? await _tryMakeKeepAliveCopy(resolved);
 
-      result.add(resolved.copyWith(viewed: existing?.viewed ?? false));
+      // Widgets (Image.file / VideoPlayerController.file) only understand
+      // real filesystem paths, not content:// SAF URIs — so whenever the
+      // item came from the SAF folder picker, always render from the
+      // materialized keep-alive copy instead of the raw content:// path.
+      // This is also what makes the very first "grant access" refresh
+      // actually show thumbnails, not just later ones after deletion.
+      final renderable = resolved.contentUri != null && keepAlivePath != null
+          ? resolved.copyWith(path: keepAlivePath)
+          : resolved;
+
+      result.add(renderable.copyWith(viewed: existing?.viewed ?? false));
       nextCache[item.id] = _RetentionEntry(
         postedAt: postedAt,
         keepAlivePath: keepAlivePath,
@@ -325,6 +337,24 @@ class StatusService {
     final destPath =
         '${dir.path}/status_${DateTime.now().millisecondsSinceEpoch}.$ext';
 
+    // `item.path` is preferred whenever it already points at a real,
+    // materialized file (Halati's own keep-alive copy, or a legacy direct
+    // path) — only fall back to re-reading the raw SAF content:// URI if
+    // no local copy exists yet, since that URI can stop resolving the
+    // moment the sender deletes the original status.
+    final localFile = File(item.path);
+    if (await localFile.exists()) {
+      final saved = await localFile.copy(destPath);
+      unawaited(MediaStoreService.instance.publish(
+        sourcePath: saved.path,
+        displayName: saved.uri.pathSegments.last,
+        kind: item.type == StatusMediaType.video
+            ? DownloadKind.video
+            : DownloadKind.image,
+      ));
+      return saved;
+    }
+
     if (item.contentUri != null) {
       final bytes = await saf.getDocumentContent(Uri.parse(item.contentUri!));
       if (bytes == null) {
@@ -332,11 +362,17 @@ class StatusService {
       }
       final file = File(destPath);
       await file.writeAsBytes(bytes);
+      unawaited(MediaStoreService.instance.publish(
+        sourcePath: file.path,
+        displayName: file.uri.pathSegments.last,
+        kind: item.type == StatusMediaType.video
+            ? DownloadKind.video
+            : DownloadKind.image,
+      ));
       return file;
-    } else {
-      final src = File(item.path);
-      return src.copy(destPath);
     }
+
+    throw Exception('تعذر العثور على ملف الحالة');
   }
 }
 
@@ -387,7 +423,6 @@ extension _StatusItemHelpers on StatusItem {
         type: type,
         postedAt: postedAt,
         viewed: viewed,
-        contactName: contactName,
         deletedByOwner: deletedByOwner,
       );
 }

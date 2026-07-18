@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localization.dart';
 import '../services/settings_service.dart';
 import '../services/update_service.dart';
+import '../utils/app_links.dart';
 import '../widgets/update_dialog.dart';
 import 'about_screen.dart';
 
@@ -120,10 +121,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Storage path (informational only — retention/limits removed
-          // per product decision: Halati now always keeps a deleted
-          // status visible until its real 24h WhatsApp lifetime ends,
-          // so a user-configurable retention setting no longer applies).
+          // Storage path — reflects where downloads/saved statuses
+          // actually land now (public MediaStore collections), which is
+          // what actually shows up in a file manager / Gallery app.
+          // Retention/limits were intentionally removed: Halati always
+          // keeps a deleted status visible until its real 24h WhatsApp
+          // lifetime ends, so a user-configurable retention setting no
+          // longer applies.
           _Card(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,17 +135,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _SectionHeader(
                     icon: Icons.folder_open, title: T(context, 'storage_path')),
                 const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainer,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text(
-                    'storage/emulated/0/halati/download',
-                    style: TextStyle(fontFamily: 'monospace'),
-                  ),
+                _PathRow(
+                  icon: Icons.movie_outlined,
+                  label: T(context, 'storage_path_videos'),
+                  path: 'Movies/Halati',
+                ),
+                const SizedBox(height: 8),
+                _PathRow(
+                  icon: Icons.image_outlined,
+                  label: T(context, 'storage_path_images'),
+                  path: 'Pictures/Halati',
+                ),
+                const SizedBox(height: 8),
+                _PathRow(
+                  icon: Icons.download_outlined,
+                  label: T(context, 'storage_path_other'),
+                  path: 'Download/Halati',
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -215,7 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               // ignore: deprecated_member_use
               await Share.share(
-                'حالاتي — تطبيق حفظ حالات واتساب: https://play.google.com/store/apps',
+                T(context, 'share_message'),
                 subject: 'حالاتي',
               );
             },
@@ -228,11 +237,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 8),
           Center(
             child: TextButton(
-              onPressed: () =>
-                  launchUrl(Uri.parse('https://example.com/privacy')),
+              onPressed: () => launchUrl(
+                Uri.parse(AppLinks.privacyPolicyUrl),
+                mode: LaunchMode.externalApplication,
+              ),
               child: Text(T(context, 'privacy_policy')),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PathRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String path;
+  const _PathRow({required this.icon, required this.label, required this.path});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Text(label,
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+          const Spacer(),
+          Text(path,
+              style: TextStyle(
+                  fontFamily: 'monospace', fontSize: 12, color: scheme.onSurface)),
         ],
       ),
     );

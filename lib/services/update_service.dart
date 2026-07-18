@@ -32,7 +32,6 @@ class UpdateService {
   static const String manifestUrl =
       'https://raw.githubusercontent.com/abw3laa/halati_updates/main/update.json';
 
-  static const _kSkippedVersionKey = 'update_service.skipped_version';
   static const _kLastCheckKey = 'update_service.last_check_millis';
 
   final Dio _dio = Dio(BaseOptions(
@@ -92,18 +91,6 @@ class UpdateService {
       // as "no update available right now", never blocks app usage.
       return null;
     }
-  }
-
-  /// Whether the user previously tapped "تجاهل هذا الإصدار" for this
-  /// exact version, so a non-mandatory prompt doesn't nag them again.
-  Future<bool> isSkipped(String version) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kSkippedVersionKey) == version;
-  }
-
-  Future<void> skipVersion(String version) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kSkippedVersionKey, version);
   }
 
   /// Downloads the APK referenced by [manifest] to a cache file,

@@ -74,11 +74,15 @@ class AppStrings {
       'en': 'Paste video link here...',
       'tr': 'Video bağlantısını buraya yapıştırın...'
     },
-    'paste': {'ar': 'لصق', 'en': 'Paste', 'tr': 'Yapıştır'},
+    'fetch_media': {'ar': 'جلب الوسائط', 'en': 'Fetch media', 'tr': 'Medyayı getir'},
+    'clipboard_empty': {
+      'ar': 'لا يوجد رابط في الحافظة — انسخ رابطاً أولاً ثم اضغط جلب الوسائط.',
+      'en': "Clipboard is empty — copy a link first, then tap Fetch media.",
+      'tr': 'Pano boş — önce bir bağlantı kopyalayın, ardından Medyayı getire dokunun.'
+    },
     'choose_format': {'ar': 'اختر التنسيق:', 'en': 'Choose format:', 'tr': 'Format seçin:'},
     'format_video': {'ar': 'فيديو', 'en': 'Video', 'tr': 'Video'},
     'format_audio': {'ar': 'صوت', 'en': 'Audio', 'tr': 'Ses'},
-    'format_image': {'ar': 'صور', 'en': 'Image', 'tr': 'Resim'},
     'download_now': {'ar': 'تنزيل الآن', 'en': 'Download now', 'tr': 'Şimdi indir'},
     'my_downloads': {'ar': 'تحميلاتي', 'en': 'My downloads', 'tr': 'İndirmelerim'},
     'downloading': {'ar': 'جارٍ التنزيل...', 'en': 'Downloading...', 'tr': 'İndiriliyor...'},
@@ -105,6 +109,11 @@ class AppStrings {
       'tr': 'Bu bölümde henüz indirilen dosya yok.'
     },
     'delete': {'ar': 'حذف', 'en': 'Delete', 'tr': 'Sil'},
+    'cannot_open_file': {
+      'ar': 'تعذر فتح الملف — قد لا يوجد تطبيق مناسب لفتحه على جهازك.',
+      'en': "Couldn't open the file — you may not have an app that can open it.",
+      'tr': 'Dosya açılamadı — bunu açabilecek bir uygulamanız olmayabilir.'
+    },
 
     // Settings screen
     'settings_title': {'ar': 'الإعدادات', 'en': 'Settings', 'tr': 'Ayarlar'},
@@ -116,12 +125,20 @@ class AppStrings {
       'tr': 'Uygulamanın gece modunu etkinleştir'
     },
     'storage_path': {'ar': 'مسار التخزين', 'en': 'Storage path', 'tr': 'Depolama yolu'},
+    'storage_path_videos': {'ar': 'الفيديوهات', 'en': 'Videos', 'tr': 'Videolar'},
+    'storage_path_images': {'ar': 'الصور', 'en': 'Images', 'tr': 'Resimler'},
+    'storage_path_other': {'ar': 'ملفات أخرى', 'en': 'Other files', 'tr': 'Diğer dosyalar'},
     'storage_path_desc': {
-      'ar': 'يتم تصنيف الوسائط المحملة تلقائياً إلى مجلدات فرعية (صور، فيديو، مقاطع صوتية) لسهولة الوصول إليها.',
-      'en': 'Downloaded media is automatically sorted into subfolders (images, video, audio) for easy access.',
-      'tr': 'İndirilen medya, kolay erişim için otomatik olarak alt klasörlere (resim, video, ses) ayrılır.'
+      'ar': 'تُحفظ الملفات في مجلدات ظاهرة لأي تطبيق آخر: الفيديوهات في معرض الصور مباشرة، والصور كذلك، وبقية الملفات في مجلد التنزيلات.',
+      'en': 'Files are saved into folders visible to any other app: videos and images go straight into your Gallery, everything else into your Downloads folder.',
+      'tr': 'Dosyalar başka herhangi bir uygulamanın görebileceği klasörlere kaydedilir: video ve resimler doğrudan Galeriye, diğer her şey İndirilenler klasörüne gider.'
     },
     'share_app': {'ar': 'مشاركة التطبيق مع الأصدقاء', 'en': 'Share app with friends', 'tr': 'Uygulamayı arkadaşlarınla paylaş'},
+    'share_message': {
+      'ar': 'جرّب تطبيق حالاتي لحفظ حالات واتساب وتنزيل الفيديوهات بدون علامة مائية:\nhttps://abw3laa.github.io/halati_app/',
+      'en': 'Try Halati to save WhatsApp statuses and download videos without a watermark:\nhttps://abw3laa.github.io/halati_app/',
+      'tr': "WhatsApp durumlarını kaydetmek ve filigransız video indirmek için Halati'yi deneyin:\nhttps://abw3laa.github.io/halati_app/"
+    },
     'privacy_policy': {'ar': 'سياسة الخصوصية وشروط الاستخدام', 'en': 'Privacy policy & terms', 'tr': 'Gizlilik politikası ve şartlar'},
     'encryption_note': {
       'ar': 'يتم تشفير جميع عمليات الحفظ محلياً على جهازك لضمان الخصوصية القصوى.',
@@ -174,7 +191,7 @@ class AppStrings {
       'tr': 'Yeni bir güncelleme mevcut'
     },
     'update_download_now': {'ar': 'تنزيل الآن', 'en': 'Download now', 'tr': 'Şimdi indir'},
-    'update_skip': {'ar': 'تجاهل هذا الإصدار', 'en': 'Skip this version', 'tr': 'Bu sürümü atla'},
+    'update_later': {'ar': 'لاحقاً', 'en': 'Later', 'tr': 'Daha sonra'},
     'update_cancel': {'ar': 'إلغاء', 'en': 'Cancel', 'tr': 'İptal'},
     'update_downloaded': {
       'ar': 'اكتمل التنزيل، جارٍ فتح المثبّت...',

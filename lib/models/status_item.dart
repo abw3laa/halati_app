@@ -28,7 +28,6 @@ class StatusItem {
   final DateTime postedAt;
 
   final bool viewed;
-  final String contactName;
 
   /// True once the status has disappeared from WhatsApp's live
   /// `.Statuses` folder before its natural 24h lifetime ended — i.e. the
@@ -43,7 +42,6 @@ class StatusItem {
     required this.type,
     required this.postedAt,
     this.viewed = false,
-    this.contactName = '',
     this.deletedByOwner = false,
   });
 
@@ -71,7 +69,6 @@ class StatusItem {
         type: type,
         postedAt: postedAt,
         viewed: viewed ?? this.viewed,
-        contactName: contactName,
         deletedByOwner: deletedByOwner ?? this.deletedByOwner,
       );
 }

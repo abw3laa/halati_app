@@ -7,7 +7,7 @@ import '../services/download_service.dart';
 import '../services/video_api_service.dart';
 import 'downloads_screen.dart';
 
-enum _Format { video, audio, image }
+enum _Format { video, audio }
 
 class DownloadScreen extends StatefulWidget {
   const DownloadScreen({super.key});
@@ -24,11 +24,25 @@ class _DownloadScreenState extends State<DownloadScreen> {
   String? _error;
   bool _resolving = false; // true while VideoApiService is extracting the link
 
-  Future<void> _paste() async {
+  bool get _isYouTubeLink =>
+      VideoApiService.isYouTubeUrl(_controller.text.trim());
+
+  /// Reads the clipboard and immediately starts the fetch/download in one
+  /// tap — replaces the old two-step "Paste, then separately press
+  /// Download" flow, which is what previously made a stale link linger
+  /// in the field until manually cleared.
+  Future<void> _fetchFromClipboard() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (data?.text != null) {
-      setState(() => _controller.text = data!.text!);
+    final text = data?.text?.trim();
+    if (text == null || text.isEmpty) {
+      setState(() => _error = T(context, 'clipboard_empty'));
+      return;
     }
+    setState(() {
+      _controller.text = text;
+      _error = null;
+    });
+    await _startDownload();
   }
 
   Future<void> _startDownload() async {
@@ -40,20 +54,28 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
     setState(() => _error = null);
 
-    // Resolve the actual file URL to hand to the on-device downloader:
+    // Resolve the actual file URL to hand to the on-device downloader,
+    // and the real extension/kind that goes with it:
     //  - If the user already pasted a direct media link (.mp4/.jpg/...),
     //    use it as-is, exactly like before.
     //  - Otherwise (a TikTok/Instagram/Facebook/YouTube page link), call
     //    our external extraction API first to get the clean, no-watermark
-    //    direct URL, then continue with the same download flow.
+    //    direct URL, then continue with the same download flow. Only
+    //    YouTube links honor the video/audio picker — every other
+    //    platform is always downloaded as video, matching how
+    //    TikTok/Instagram/Facebook status-style clips are actually used.
     String downloadUrl;
+    String? knownExt;
     if (DownloadService.instance.looksLikeDirectMediaUrl(pastedUrl)) {
       downloadUrl = pastedUrl;
     } else {
       setState(() => _resolving = true);
       try {
-        final extracted = await VideoApiService.instance.extract(pastedUrl);
+        final wantAudio = _isYouTubeLink && _format == _Format.audio;
+        final extracted = await VideoApiService.instance
+            .extract(pastedUrl, wantAudio: wantAudio);
         downloadUrl = extracted.directUrl;
+        knownExt = extracted.ext;
       } catch (e) {
         if (!mounted) return;
         setState(() {
@@ -73,13 +95,20 @@ class _DownloadScreenState extends State<DownloadScreen> {
     try {
       await DownloadService.instance.download(
         downloadUrl,
+        knownExt: knownExt,
         cancelToken: _cancelToken,
         onProgress: (p) {
           if (mounted) setState(() => _progress = p);
         },
       );
       if (!mounted) return;
-      setState(() => _progress = null);
+      setState(() {
+        _progress = null;
+        // Clear the field on success so the next paste never needs to
+        // manually delete a leftover link first.
+        _controller.clear();
+        _format = _Format.video;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(T(context, 'saved'))),
       );
@@ -133,9 +162,17 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     Expanded(
                       child: TextField(
                         controller: _controller,
+                        onChanged: (_) => setState(() {}), // refresh _isYouTubeLink-dependent UI live
                         decoration: InputDecoration(
                           hintText: T(context, 'link_hint'),
                           prefixIcon: const Icon(Icons.link),
+                          suffixIcon: _controller.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () =>
+                                      setState(() => _controller.clear()),
+                                ),
                           filled: true,
                           fillColor: scheme.surfaceContainerLow,
                           border: OutlineInputBorder(
@@ -145,10 +182,18 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                        onPressed: _paste, child: Text(T(context, 'paste'))),
                   ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: (_progress == null && !_resolving)
+                        ? _fetchFromClipboard
+                        : null,
+                    icon: const Icon(Icons.content_paste_go, size: 18),
+                    label: Text(T(context, 'fetch_media')),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -160,27 +205,33 @@ class _DownloadScreenState extends State<DownloadScreen> {
                   const SizedBox(height: 8),
                   Text(_error!, style: TextStyle(color: scheme.error)),
                 ],
-                const SizedBox(height: 20),
-                Text(T(context, 'choose_format'),
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainer,
-                    borderRadius: BorderRadius.circular(12),
+                // Video/audio choice only ever matters for YouTube links —
+                // every other supported platform (TikTok/Instagram/
+                // Facebook) is always downloaded as a normal video clip,
+                // so the picker only appears once a YouTube link is
+                // detected in the field, instead of always showing a
+                // 3-way choice that didn't actually apply to most links.
+                if (_isYouTubeLink) ...[
+                  const SizedBox(height: 20),
+                  Text(T(context, 'choose_format'),
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        _formatButton(context, _Format.video, Icons.movie,
+                            T(context, 'format_video')),
+                        _formatButton(context, _Format.audio,
+                            Icons.music_note, T(context, 'format_audio')),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      _formatButton(context, _Format.video, Icons.movie,
-                          T(context, 'format_video')),
-                      _formatButton(context, _Format.audio, Icons.music_note,
-                          T(context, 'format_audio')),
-                      _formatButton(context, _Format.image, Icons.image,
-                          T(context, 'format_image')),
-                    ],
-                  ),
-                ),
+                ],
                 if (_progress != null) ...[
                   const SizedBox(height: 20),
                   Container(

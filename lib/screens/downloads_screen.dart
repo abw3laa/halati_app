@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:open_filex/open_filex.dart';
 
 import '../l10n/app_localization.dart';
 import '../models/download_item.dart';
@@ -41,6 +42,15 @@ class _DownloadsScreenState extends State<DownloadsScreen>
   Future<void> _delete(DownloadItem item) async {
     await DownloadService.instance.deleteDownload(item);
     await _load();
+  }
+
+  Future<void> _open(BuildContext context, DownloadItem item) async {
+    final result = await OpenFilex.open(item.path);
+    if (result.type != ResultType.done && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(T(context, 'cannot_open_file'))),
+      );
+    }
   }
 
   @override
@@ -89,7 +99,11 @@ class _DownloadsScreenState extends State<DownloadsScreen>
                   padding: const EdgeInsets.all(16),
                   itemCount: list.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (_, i) => _DownloadTile(item: list[i], onDelete: () => _delete(list[i])),
+                  itemBuilder: (_, i) => _DownloadTile(
+                    item: list[i],
+                    onDelete: () => _delete(list[i]),
+                    onOpen: () => _open(context, list[i]),
+                  ),
                 );
               }).toList(),
             ),
@@ -100,13 +114,21 @@ class _DownloadsScreenState extends State<DownloadsScreen>
 class _DownloadTile extends StatelessWidget {
   final DownloadItem item;
   final VoidCallback onDelete;
+  final VoidCallback onOpen;
 
-  const _DownloadTile({required this.item, required this.onDelete});
+  const _DownloadTile({
+    required this.item,
+    required this.onDelete,
+    required this.onOpen,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
+    return InkWell(
+      onTap: onOpen,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLowest,
@@ -131,7 +153,9 @@ class _DownloadTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurface)),
                 Text('${item.sizeLabel} • ${_dateLabel(item.modified)}',
                     style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
               ],
@@ -143,6 +167,7 @@ class _DownloadTile extends StatelessWidget {
             tooltip: T(context, 'delete'),
           ),
         ],
+      ),
       ),
     );
   }

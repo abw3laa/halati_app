@@ -6,11 +6,15 @@ plugins {
 
 android {
     namespace = "com.abwaalaa.halati"
-    // Pinned explicitly rather than left as flutter.compileSdkVersion:
-    // gallery_saver_plus / photo_manager's AndroidX dependencies require
-    // compileSdk 34+, but flutter.compileSdkVersion silently resolved to
-    // 31 on the CI runner's Flutter install, breaking the release build.
-    compileSdk = 34
+    // Pinned explicitly rather than left as flutter.compileSdkVersion,
+    // which silently resolved to 31 on some CI Flutter installs and broke
+    // the release build. Kept at the highest level any plugin currently
+    // requires (package_info_plus, photo_manager, share_plus,
+    // shared_preferences_android, url_launcher_android,
+    // video_player_android, androidx.core 1.17.0 all need 36+ as of
+    // Flutter stable 3.44.x) — bump this again if a future `flutter build`
+    // log reports a plugin asking for something higher than 36.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -83,11 +83,6 @@ class _UpdateDialogState extends State<UpdateDialog> {
     }
   }
 
-  void _skip() {
-    UpdateService.instance.skipVersion(widget.result.manifest.latestVersion);
-    Navigator.of(context).pop();
-  }
-
   @override
   void dispose() {
     _cancelToken?.cancel();
@@ -229,13 +224,12 @@ class _UpdateDialogState extends State<UpdateDialog> {
             if (!_mandatory)
               Expanded(
                 child: TextButton(
-                  onPressed: _skip,
-                  child: Text(T(context, 'update_skip')),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(T(context, 'update_later')),
                 ),
               ),
             if (!_mandatory) const SizedBox(width: 8),
             Expanded(
-              flex: _mandatory ? 1 : 1,
               child: FilledButton.icon(
                 onPressed: _startDownload,
                 icon: const Icon(Icons.download, size: 18),
@@ -291,21 +285,15 @@ class _UpdateDialogState extends State<UpdateDialog> {
   }
 }
 
-/// Shows the update dialog if [result] indicates a newer version is
-/// available and the user hasn't previously skipped it (mandatory
-/// updates always show regardless).
+/// Shows the update dialog whenever [result] indicates a newer version is
+/// available. There is no permanent per-version dismissal: a pending
+/// update is offered again on every app launch (mandatory updates on top
+/// of that also can't be dismissed at all) until the user installs it.
 Future<void> showUpdateDialogIfNeeded(
   BuildContext context,
   UpdateCheckResult? result,
 ) async {
   if (result == null || !result.isUpdateAvailable) return;
-
-  if (!result.isMandatory) {
-    final skipped =
-        await UpdateService.instance.isSkipped(result.manifest.latestVersion);
-    if (skipped) return;
-  }
-
   if (!context.mounted) return;
   await showDialog(
     context: context,

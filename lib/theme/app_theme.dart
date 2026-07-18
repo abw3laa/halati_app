@@ -45,6 +45,13 @@ class AppColors {
   static const inverseSurface = Color(0xFF2D3133);
   static const inverseOnSurface = Color(0xFFEFF1F4);
 
+  // Dedicated dark-mode secondary/body text color — deliberately *not*
+  // reusing outlineVariant (meant for thin borders/dividers, not text).
+  // Reusing that light-gray-on-light-gray token previously made list
+  // subtitles (file size, date, timestamps) nearly unreadable against
+  // Halati's dark surface colors.
+  static const darkOnSurfaceVariant = Color(0xFFB8C2CC);
+
   // "Communication Green" gradient — reserved for WhatsApp-flavoured actions
   static const waGreenStart = Color(0xFF25D366);
   static const waGreenEnd = Color(0xFF128C7E);
@@ -138,7 +145,7 @@ class AppTheme {
         onSecondaryContainer: Colors.white,
         surface: AppColors.darkSurface,
         onSurface: Colors.white,
-        onSurfaceVariant: AppColors.outlineVariant,
+        onSurfaceVariant: AppColors.darkOnSurfaceVariant,
         error: AppColors.error,
         surfaceContainerLowest: Color(0xFF16232A),
         surfaceContainerLow: Color(0xFF1A2830),

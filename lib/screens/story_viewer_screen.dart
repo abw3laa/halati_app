@@ -177,31 +177,26 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.white24,
-                          child: Icon(Icons.person, color: Colors.white),
+                        Icon(
+                          _current.type == StatusMediaType.video
+                              ? Icons.movie_outlined
+                              : Icons.image_outlined,
+                          color: Colors.white,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text(_current.contactName.isEmpty ? 'Status' : _current.contactName,
+                              Text(_relativeTime(_current.postedAt),
                                   style: const TextStyle(
-                                      color: Colors.white, fontWeight: FontWeight.w600)),
-                              Row(
-                                children: [
-                                  Text(_relativeTime(_current.postedAt),
-                                      style: const TextStyle(
-                                          color: Colors.white70, fontSize: 12)),
-                                  if (_current.deletedByOwner) ...[
-                                    const SizedBox(width: 6),
-                                    const Text('🚫',
-                                        style: TextStyle(fontSize: 12)),
-                                  ],
-                                ],
-                              ),
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14)),
+                              if (_current.deletedByOwner) ...[
+                                const SizedBox(width: 6),
+                                const Text('🚫',
+                                    style: TextStyle(fontSize: 13)),
+                              ],
                             ],
                           ),
                         ),

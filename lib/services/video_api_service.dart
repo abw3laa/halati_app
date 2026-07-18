@@ -18,6 +18,15 @@ class VideoApiService {
     ),
   );
 
+  /// True when [pageUrl] is a YouTube link — this is the only platform
+  /// where the download screen offers a video/audio choice, since
+  /// TikTok/Instagram/Facebook status-style clips are always short
+  /// videos in practice.
+  static bool isYouTubeUrl(String pageUrl) {
+    final lower = pageUrl.toLowerCase();
+    return lower.contains('youtube.com') || lower.contains('youtu.be');
+  }
+
   /// Base URL of your extraction server.
   ///
   /// - While testing locally with an Android *emulator*, use
@@ -31,12 +40,21 @@ class VideoApiService {
   /// Sends [pageUrl] (a TikTok/Instagram/Facebook/YouTube link) to the
   /// `/extract` endpoint and returns the direct, watermark-free media URL.
   ///
+  /// [wantAudio] only has an effect for YouTube links — it asks the server
+  /// to return the best audio-only stream instead of video. Every other
+  /// platform ignores it server-side and always extracts video, since
+  /// TikTok/Instagram/Facebook clips are only ever downloaded as video in
+  /// this app.
+  ///
   /// Throws a [VideoApiException] with a user-facing message on failure.
-  Future<ExtractedMedia> extract(String pageUrl) async {
+  Future<ExtractedMedia> extract(String pageUrl, {bool wantAudio = false}) async {
     try {
       final response = await _dio.post(
         '$baseUrl/extract',
-        data: {'url': pageUrl},
+        data: {
+          'url': pageUrl,
+          'format': wantAudio ? 'audio' : 'video',
+        },
       );
 
       final data = response.data as Map<String, dynamic>;

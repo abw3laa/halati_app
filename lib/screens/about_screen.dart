@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localization.dart';
+import '../utils/app_links.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -163,7 +164,10 @@ class AboutScreen extends StatelessWidget {
             child: Column(
               children: [
                 TextButton.icon(
-                  onPressed: () => launchUrl(Uri.parse('https://example.com/privacy')),
+                  onPressed: () => launchUrl(
+                    Uri.parse(AppLinks.privacyPolicyUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
                   icon: const Icon(Icons.policy, size: 18),
                   label: Text(T(context, 'privacy_policy')),
                 ),
