@@ -21,13 +21,26 @@ dependencies:
 
   # Permissions & Android Storage Access Framework
   permission_handler: ^12.0.3
-  # Real SAF (Storage Access Framework) bridge — required to read
-  # WhatsApp's .Statuses folder on Android 11+, where plain File/Directory
-  # APIs can no longer see other apps' media directories at all (scoped
-  # storage). This must stay a real dependency; a previous local stub
-  # (`saf = null`) silently broke both folder access and the "grant
-  # access" button.
-  shared_storage: ^0.8.1
+  # SAF (Storage Access Framework) — required to read WhatsApp's
+  # .Statuses folder on Android 11+, where plain File/Directory APIs can
+  # no longer see other apps' media directories at all (scoped storage).
+  #
+  # History: this used to be `shared_storage`, discontinued on pub.dev
+  # *and* its own Android build.gradle still calls the long-dead
+  # `jcenter()` repository, unconditionally failing any build on a modern
+  # Gradle/AGP (the error is inside the package's own build file, not
+  # fixable from this project). A brief attempt at a single `saf` package
+  # was dropped too: its pub.dev listing (publisher ivehement.com,
+  # v1.0.4) and its GitHub repo (now under a different owner, jvoltci,
+  # v2.1.0) had drifted out of sync enough that it wasn't clear which
+  # version `flutter pub get` would actually resolve.
+  #
+  # saf_util + saf_stream (published together, single verified publisher
+  # flutter-cavalry.com, both actively maintained) split the same
+  # capability cleanly: saf_util for the folder picker/listing/stat/
+  # thumbnails, saf_stream for actually reading/copying a file's bytes.
+  saf_util: ^2.2.0
+  saf_stream: ^0.12.3
 
   # Networking (for the direct-link downloader)
   dio: ^5.4.3+1

@@ -5,8 +5,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:saf_stream/saf_stream.dart';
+import 'package:saf_util/saf_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_storage/shared_storage.dart' as saf;
 
 import '../models/status_item.dart';
 import 'media_store_service.dart';
@@ -37,6 +38,8 @@ class StatusService {
   static final instance = StatusService._();
 
   SharedPreferences? _prefs;
+  final SafUtil _safUtil = SafUtil();
+  final SafStream _safStream = SafStream();
 
   Future<SharedPreferences> get _prefsInstance async =>
       _prefs ??= await SharedPreferences.getInstance();
@@ -87,11 +90,7 @@ class StatusService {
   /// Android 11+ due to scoped storage. Returns the persisted tree URI
   /// (store it via [SettingsService.setStatusTreeUri]) or null if cancelled.
   Future<String?> pickStatusFolder() async {
-    final uri = await saf.openDocumentTree(
-      grantWritePermission: false,
-      persistablePermission: true,
-    );
-    return uri?.toString();
+    return _safUtil.openDirectory();
   }
 
   // ── Retention cache (persisted as small JSON in SharedPreferences) ──────
@@ -154,32 +153,42 @@ class StatusService {
 
     // 2) SAF fallback (Android 11+ scoped storage) — only tried when the
     // legacy scan found nothing, mirroring the previous behaviour.
+    //
+    // Deliberately only reads the two fields confirmed present on every
+    // saf_util release (`name`, `uri`) rather than guessing at
+    // mimeType/lastModified accessors that aren't documented anywhere —
+    // getting a field name wrong here would silently break the release
+    // build again, exactly like the shared_storage/jcenter failure this
+    // migration exists to fix. The 24h countdown still works correctly
+    // in this branch: it's anchored the first time *Halati* sees the
+    // status (see `_mergeWithRetentionCache`), not WhatsApp's original
+    // post time, which only matters if the app was closed for over 24h
+    // straight without ever refreshing — an edge case, not the common
+    // path (the primary, most common route already reads the real
+    // WhatsApp-reported modified time via the direct-file legacy scan
+    // above).
     if (live.isEmpty && treeUri != null) {
       try {
-        final uri = Uri.parse(treeUri);
-        await for (final doc in saf.listFiles(uri, columns: const [
-          saf.DocumentFileColumn.id,
-          saf.DocumentFileColumn.displayName,
-          saf.DocumentFileColumn.size,
-          saf.DocumentFileColumn.lastModified,
-          saf.DocumentFileColumn.mimeType,
-        ])) {
-          final name = doc.name ?? '';
-          final mime = doc.type ?? '';
-          final isVideo = mime.startsWith('video/') || name.endsWith('.mp4');
-          final isImage = mime.startsWith('image/') ||
-              name.endsWith('.jpg') ||
-              name.endsWith('.jpeg') ||
-              name.endsWith('.png') ||
-              name.endsWith('.webp');
+        final entries = await _safUtil.list(treeUri);
+        for (final doc in entries) {
+          if (doc.isDir) continue;
+          final name = doc.name;
+          final lower = name.toLowerCase();
+          final isVideo = lower.endsWith('.mp4') ||
+              lower.endsWith('.3gp') ||
+              lower.endsWith('.mkv');
+          final isImage = lower.endsWith('.jpg') ||
+              lower.endsWith('.jpeg') ||
+              lower.endsWith('.png') ||
+              lower.endsWith('.webp');
           if (!isVideo && !isImage) continue;
           final type = isVideo ? StatusMediaType.video : StatusMediaType.image;
           live.add(StatusItem(
             id: _stableId(name, type),
-            path: doc.uri.toString(),
-            contentUri: doc.uri.toString(),
+            path: doc.uri,
+            contentUri: doc.uri,
             type: type,
-            postedAt: doc.lastModified ?? DateTime.now(),
+            postedAt: DateTime.now(),
           ));
         }
       } catch (e) {
@@ -291,9 +300,12 @@ class StatusService {
       if (await dest.exists()) return destPath; // already cached
 
       if (item.contentUri != null) {
-        final bytes = await saf.getDocumentContent(Uri.parse(item.contentUri!));
-        if (bytes == null) return null;
-        await dest.writeAsBytes(bytes);
+        // copyToLocalFile streams the SAF file straight to disk (see the
+        // confirmed saf_stream example app's `_copyToLocalFile`), instead
+        // of loading the whole file into memory via readFileBytes first —
+        // meaningfully better for the multi-MB video statuses this path
+        // most often handles.
+        await _safStream.copyToLocalFile(item.contentUri!, destPath);
       } else {
         await File(item.path).copy(destPath);
       }
@@ -356,12 +368,12 @@ class StatusService {
     }
 
     if (item.contentUri != null) {
-      final bytes = await saf.getDocumentContent(Uri.parse(item.contentUri!));
-      if (bytes == null) {
-        throw Exception('تعذر قراءة محتوى الحالة');
-      }
+      // copyToLocalFile streams the SAF file straight to disk, matching
+      // the same approach used in _tryMakeKeepAliveCopy above — throws
+      // naturally (caught by callers) if the SAF file can no longer be
+      // read, e.g. the sender deleted the status in the meantime.
       final file = File(destPath);
-      await file.writeAsBytes(bytes);
+      await _safStream.copyToLocalFile(item.contentUri!, destPath);
       unawaited(MediaStoreService.instance.publish(
         sourcePath: file.path,
         displayName: file.uri.pathSegments.last,
