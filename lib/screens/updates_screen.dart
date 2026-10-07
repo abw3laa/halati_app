@@ -79,7 +79,7 @@ class _UpdatesScreenState extends State<UpdatesScreen> {
             const Icon(Icons.wifi_tethering, size: 26),
             const SizedBox(width: 8),
             Text(T(context, 'updates_title'),
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+                style: const TextStyle(fontWeight: FontWeight.w800)),
           ],
         ),
         actions: [
@@ -94,7 +94,7 @@ class _UpdatesScreenState extends State<UpdatesScreen> {
             : CustomScrollView(
                 slivers: [
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                     sliver: SliverToBoxAdapter(child: _MyStatusTile()),
                   ),
                   if (_items.isEmpty)
@@ -174,16 +174,14 @@ class _MyStatusTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)
-        ],
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
       ),
       child: Row(
         children: [
           Container(
-            width: 50,
-            height: 50,
+            width: 58,
+            height: 58,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [AppColors.waGreenStart, AppColors.waGreenEnd],
@@ -261,9 +259,9 @@ class _StatusGrid extends StatelessWidget {
     return SliverGrid(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.78,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
+        childAspectRatio: 0.76,
       ),
       delegate: SliverChildBuilderDelegate(
         (context, i) => _StatusThumbnail(
