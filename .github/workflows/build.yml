@@ -2,7 +2,7 @@ name: Halati Flutter CI
 
 on:
   push:
-    branches: [ main, 'release/**' ]
+    branches: [ main ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
@@ -35,19 +35,19 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release
       - name: Rename APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk "halati-${{ github.ref_name }}.apk"
+        run: cp build/app/outputs/flutter-apk/app-release.apk "halati-2.1.0.apk"
       - name: Generate SHA-256
-        run: sha256sum "halati-${{ github.ref_name }}.apk" | tee "halati-${{ github.ref_name }}.apk.sha256"
+        run: sha256sum "halati-2.1.0.apk" | tee "halati-2.1.0.apk.sha256"
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: halati-release-apk
           path: |
-            halati-${{ github.ref_name }}.apk
-            halati-${{ github.ref_name }}.apk.sha256
+            halati-2.1.0.apk
+            halati-2.1.0.apk.sha256
 
   github-release:
-    if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release/')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/main' && github.event.head_commit.message == 'release: publish Halati 2.1.0')
     needs: verify
     runs-on: ubuntu-latest
     steps:
