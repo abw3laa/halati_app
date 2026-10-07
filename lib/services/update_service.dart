@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -121,6 +122,13 @@ class UpdateService {
         if (total > 0) onProgress(received / total);
       },
     );
+    if (manifest.sha256 != null && manifest.sha256!.trim().isNotEmpty) {
+      final digest = sha256.convert(await file.readAsBytes()).toString();
+      if (digest.toLowerCase() != manifest.sha256!.trim().toLowerCase()) {
+        await file.delete().catchError((_) => file);
+        throw const FormatException('Downloaded APK integrity check failed.');
+      }
+    }
     return file;
   }
 
