@@ -1,41 +1,65 @@
-name: Build Flutter APK
+name: Halati Flutter CI
 
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: zulu
           java-version: '17'
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          # Use the latest *stable* release rather than a fixed version
-          # number. A hard-pinned old version (e.g. 3.24.5, Dart 3.5.4)
-          # previously broke the build because flutter_lints ^6.0.0 needs
-          # Dart >=3.8.0 — newer than that pinned Flutter shipped. Staying
-          # on "stable" avoids repeating that mismatch as pubspec.yaml's
-          # own dependencies get upgraded over time.
-          channel: 'stable'
-
+          channel: stable
+          cache: true
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Build APK
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
+      - name: Build release APK
         run: flutter build apk --release
-
-      - name: Upload APK
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk "halati-\${{ github.ref_name }}.apk"
+      - name: Generate SHA-256
+        run: sha256sum "halati-\${{ github.ref_name }}.apk" | tee "halati-\${{ github.ref_name }}.apk.sha256"
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: halati-release-apk
+          path: |
+            halati-\${{ github.ref_name }}.apk
+            halati-\${{ github.ref_name }}.apk.sha256
+
+  github-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: halati-release-apk
+          path: release
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            release/*.apk
+            release/*.sha256
