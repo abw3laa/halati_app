@@ -34,7 +34,7 @@ jobs:
         run: flutter test
       - name: Build release APK
         run: flutter build apk --release
-        - name: Read version
+      - name: Read version
         id: version
         shell: bash
         run: |
