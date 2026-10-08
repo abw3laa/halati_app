@@ -33,11 +33,30 @@ android {
         versionName = flutter.versionName
     }
 
+    val releaseKeystorePath = System.getenv("HALATI_KEYSTORE_PATH")
+    val releaseStorePassword = System.getenv("HALATI_KEYSTORE_PASSWORD")
+    val releaseKeyAlias = System.getenv("HALATI_KEY_ALIAS")
+    val releaseKeyPassword = System.getenv("HALATI_KEY_PASSWORD")
+
+    signingConfigs {
+        create("halatiRelease") {
+            if (!releaseKeystorePath.isNullOrBlank() && !releaseStorePassword.isNullOrBlank() &&
+                !releaseKeyAlias.isNullOrBlank() && !releaseKeyPassword.isNullOrBlank()) {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (!releaseKeystorePath.isNullOrBlank()) {
+                signingConfigs.getByName("halatiRelease")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
