@@ -14,8 +14,12 @@ void main() {
       ),
     );
 
-    // Wait for SettingsService.load() without waiting for background update/network work.
-    await tester.pump(const Duration(milliseconds: 500));
+    // SettingsService initializes asynchronously. Advance the fake clock in
+    // small steps, but never use pumpAndSettle because RootShell starts
+    // background update/network work after its first frame.
+    for (var i = 0; i < 20 && find.byType(RootShell).evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
 
     expect(find.byType(RootShell), findsOneWidget);
   });
