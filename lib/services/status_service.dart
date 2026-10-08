@@ -90,7 +90,8 @@ class StatusService {
   /// Android 11+ due to scoped storage. Returns the persisted tree URI
   /// (store it via [SettingsService.setStatusTreeUri]) or null if cancelled.
   Future<String?> pickStatusFolder() async {
-    return _safUtil.openDirectory();
+    final directory = await _safUtil.pickDirectory();
+    return directory?.uri;
   }
 
   // ── Retention cache (persisted as small JSON in SharedPreferences) ──────
