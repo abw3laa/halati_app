@@ -14,8 +14,8 @@ void main() {
       ),
     );
 
-    // Allow SettingsService.load() and the first frame to settle.
-    await tester.pumpAndSettle();
+    // Wait for SettingsService.load() without waiting for background update/network work.
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.byType(RootShell), findsOneWidget);
   });
