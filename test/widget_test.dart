@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:halati/main.dart';
 import 'package:halati/services/settings_service.dart';
+import 'package:halati/screens/root_shell.dart';
 
 void main() {
   testWidgets('Halati app boots with its root shell', (WidgetTester tester) async {
@@ -16,6 +17,6 @@ void main() {
     // Allow SettingsService.load() and the first frame to settle.
     await tester.pumpAndSettle();
 
-    expect(find.text('Halati'), findsOneWidget);
+    expect(find.byType(RootShell), findsOneWidget);
   });
 }
