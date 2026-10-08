@@ -53,6 +53,10 @@ jobs:
           test -n "$HALATI_KEYSTORE_PASSWORD" || { echo "Missing signing password secret"; exit 1; }
           test -n "$HALATI_KEY_ALIAS" || { echo "Missing signing alias secret"; exit 1; }
           test -n "$HALATI_KEY_PASSWORD" || { echo "Missing key password secret"; exit 1; }
+          echo "Validating release keystore credentials..."
+          keytool -list -keystore "$HALATI_KEYSTORE_PATH" -storepass "$HALATI_KEYSTORE_PASSWORD" -alias "$HALATI_KEY_ALIAS" >/dev/null || { echo "Keystore/password/alias validation failed"; exit 1; }
+          keytool -certreq -keystore "$HALATI_KEYSTORE_PATH" -storepass "$HALATI_KEYSTORE_PASSWORD" -keypass "$HALATI_KEY_PASSWORD" -alias "$HALATI_KEY_ALIAS" -file "$RUNNER_TEMP/halati-signing-check.csr" >/dev/null || { echo "Key password validation failed"; exit 1; }
+          rm -f "$RUNNER_TEMP/halati-signing-check.csr"
           flutter build apk --release
       - name: Read version
         id: version
