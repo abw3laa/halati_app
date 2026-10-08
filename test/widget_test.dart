@@ -7,19 +7,16 @@ import 'package:halati/screens/root_shell.dart';
 
 void main() {
   testWidgets('Halati app boots with its root shell', (WidgetTester tester) async {
+    final settings = SettingsService();
+    await settings.load();
+
     await tester.pumpWidget(
-      ChangeNotifierProvider(
-        create: (_) => SettingsService()..load(),
+      ChangeNotifierProvider<SettingsService>.value(
+        value: settings,
         child: const HalatiApp(),
       ),
     );
-
-    // SettingsService initializes asynchronously. Advance the fake clock in
-    // small steps, but never use pumpAndSettle because RootShell starts
-    // background update/network work after its first frame.
-    for (var i = 0; i < 20 && find.byType(RootShell).evaluate().isEmpty; i++) {
-      await tester.pump(const Duration(milliseconds: 250));
-    }
+    await tester.pump();
 
     expect(find.byType(RootShell), findsOneWidget);
   });
