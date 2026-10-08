@@ -33,12 +33,12 @@ jobs:
       - name: Test
         run: flutter test
       - name: Prepare release signing
-        if: startsWith(github.ref, 'refs/tags/v')
         env:
           HALATI_KEYSTORE_BASE64: ${{ secrets.HALATI_KEYSTORE_BASE64 }}
         run: |
           test -n "$HALATI_KEYSTORE_BASE64" || { echo "Missing HALATI_KEYSTORE_BASE64 GitHub secret"; exit 1; }
           echo "$HALATI_KEYSTORE_BASE64" | base64 --decode > android/halati-release.jks
+          test -s android/halati-release.jks || { echo "Decoded keystore is empty"; exit 1; }
 
       - name: Build release APK
         env:
@@ -47,11 +47,9 @@ jobs:
           HALATI_KEY_ALIAS: ${{ secrets.HALATI_KEY_ALIAS }}
           HALATI_KEY_PASSWORD: ${{ secrets.HALATI_KEY_PASSWORD }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            test -n "$HALATI_KEYSTORE_PASSWORD" || { echo "Missing signing password secret"; exit 1; }
-            test -n "$HALATI_KEY_ALIAS" || { echo "Missing signing alias secret"; exit 1; }
-            test -n "$HALATI_KEY_PASSWORD" || { echo "Missing key password secret"; exit 1; }
-          fi
+          test -n "$HALATI_KEYSTORE_PASSWORD" || { echo "Missing signing password secret"; exit 1; }
+          test -n "$HALATI_KEY_ALIAS" || { echo "Missing signing alias secret"; exit 1; }
+          test -n "$HALATI_KEY_PASSWORD" || { echo "Missing key password secret"; exit 1; }
           flutter build apk --release
       - name: Read version
         id: version
